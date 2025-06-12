@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   cacheApi,
   ehcache, // or cacheApi
   "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % Test,
-  "org.playframework.anorm" %% "anorm-postgres" % "2.7.0"
+  "org.playframework.anorm" %% "anorm-postgres" % "2.7.0",
+  "com.typesafe.play" %% "play-json" % "2.10.6"
 )
 
 // Adds additional packages into Twirl

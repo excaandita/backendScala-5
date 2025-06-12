@@ -8,7 +8,18 @@ GET     /                           controllers.HomeController.index()
 
 POST    /mahasiswa/create           controllers.MahasiswaCon.addMahasiswa()
 PUT     /mahasiswa/edit             controllers.MahasiswaCon.editMahasiswa()
-GET     /mahasiswa/:id              controllers.MahasiswaCon.getDetailMahasiswa(id: Long)
+GET     /mahasiswa/get/:id          controllers.MahasiswaCon.getDetailMahasiswa(id: Long)
+GET     /mahasiswa/list             controllers.MahasiswaCon.getListMahasiswa()
+
+POST    /barang/create              controllers.BarangCon.addBarang()
+PUT     /barang/edit                controllers.BarangCon.editBarang()
+GET     /barang/get/:id             controllers.BarangCon.getDetailBarang(id: Long)
+GET     /barang/list                controllers.BarangCon.getListBarang()
+
+POST    /kategori/create            controllers.KategoriCon.addKategori()
+PUT     /kategori/edit              controllers.KategoriCon.editKategori()
+GET     /kategori/get/:id           controllers.KategoriCon.getDetailKategori(id: Long)
+GET     /kategori/list              controllers.KategoriCon.getListKategori()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

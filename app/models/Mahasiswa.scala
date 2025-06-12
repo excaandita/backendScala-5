@@ -1,13 +1,16 @@
 package models
 
 import anorm.*
-import anorm.SqlParser.get
+import anorm.SqlParser.{get, scalar}
 import org.postgresql.util.PSQLException
+import play.api.Configuration
 import play.api.db.DBApi
-import play.api.libs.json.{Json, OFormat, Reads}
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 
 import java.time.{LocalDate, LocalDateTime}
-import javax.inject.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
 case class Mahasiswa(
   mahasiswa_id: Long,
@@ -18,17 +21,12 @@ case class Mahasiswa(
   start_date: LocalDate
 )
 
-case class Mahasiswa1(
-  mahasiswa_id: Long,
-  name: String,
-  email: Option[String],
-  telephone: Option[String],
-  address: Option[String],
-  start_date: LocalDate
-)
-
 @Singleton
-class MahasiswaData @Inject() ( DBApi: DBApi ) {
+class MahasiswaData @Inject()(
+  DBApi: DBApi
+) {
+
+  implicit val mahasiswaFormat: OFormat[Mahasiswa] = Json.format[Mahasiswa]
 
   val mahasiswaParser: RowParser[Mahasiswa] =
     (get[Long]("mahasiswa_id") ~
@@ -41,8 +39,8 @@ class MahasiswaData @Inject() ( DBApi: DBApi ) {
         Mahasiswa(mahasiswa_id, name, email, telephone, address, start_date)
     }
 
-//  implicit val mahasiswaFormat: OFormat[Mahasiswa] = Json.format[Mahasiswa]
-  implicit val mahasiswaFormat: Reads[Mahasiswa] = Json.reads[Mahasiswa]
+//  val MahasiswaNamedParser: RowParser[Mahasiswa] = Macro.namedParser[Mahasiswa]
+//  val MahasiswaMacroParser: RowParser[Mahasiswa] = Macro.parser[Mahasiswa]("hahah", "name", "email",  "telephone",  "address", "start_date")
 
   private val db = DBApi.database("default")
 
@@ -121,6 +119,29 @@ class MahasiswaData @Inject() ( DBApi: DBApi ) {
          |""".stripMargin
 
     SQL(sqlQuery).on("id" -> id).as[Option[Mahasiswa]](mahasiswaParser.singleOpt)
+  }
+
+  def getListMahasiswa(search: Map[String, Any]): (List[Mahasiswa], Long) = db.withConnection { implicit c =>
+    var where = s""
+    val sqlQuery: String = s"""SELECT * FROM mahasiswa WHERE TRUE """
+
+    if (search.contains("is_delete") && search("is_delete").toString.nonEmpty) {
+      where += s"AND is_delete = '${search("is_delete")}' "
+    } else {
+      where += s"AND is_delete = 'no' "
+    }
+
+    if (search.contains("name") && search("name").toString.nonEmpty) {
+      where += s"AND name ILIKE '%${search("name")}%' "
+    }
+
+    val sqlCount = """SELECT COUNT(*) FROM mahasiswa WHERE TRUE """.stripMargin
+    val total    = SQL(sqlCount + where).as(scalar[Long].single)
+
+    val list = SQL(sqlQuery + where).as(mahasiswaParser.*)
+
+    (list, total)
+
   }
 
 }

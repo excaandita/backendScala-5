@@ -1,6 +1,6 @@
 package controllers
 
-import models.*
+import models.{MahasiswaData, Mahasiswa}
 import play.api.*
 import play.api.libs.json.*
 import play.api.mvc.*
@@ -15,17 +15,14 @@ class MahasiswaCon @Inject() (
   mahasiswaData: MahasiswaData
 ) extends BaseController {
 
-//  import mahasiswaData.mahasiswaFormat
-
-//  implicit val mahasiswaFormat: Writes[Mahasiswa] = Json.writes[Mahasiswa]
-
+  import mahasiswaData.mahasiswaFormat
 
   def addMahasiswa(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     val param = request.body.asJson.get // Ini untuk body raw json
 
 //    val param = request.body.asMultipartFormData  // Ini untuk body form-data biasanya kalau form ada gambarnya
-//    val param = request.body.asFormUrlEncoded     // Ini untuk body x-www-form-encoded
-//    val param = request.getQueryString("name").getOrElse("-")
+//    val param = request.body.asFormUrlEncoded     // Ini untuk body x-www-form-encoded?
+//    val param: String = request.getQueryString("name").getOrElse("-")
 
     val mahasiswaParam = Mahasiswa(
       mahasiswa_id  = -1,
@@ -89,19 +86,30 @@ class MahasiswaCon @Inject() (
       BadRequest(Json.obj("message" -> "ID mahasiswa tidak valid"))
     } else {
       val res: Option[Mahasiswa] = mahasiswaData.getMahasiswaById(id)
-      println(res)
-      println(res.get.mahasiswa_id)
-      println(Json.toJson[Mahasiswa](res.get)(Json.writes[Mahasiswa]))
 
-//      Ok("")
       res match
         case Some(mhs) =>
           Ok(Json.obj(
             "message" -> "Get Detail Mahasiswa berhasil",
-//            "data"    -> Json.toJson[Mahasiswa](mhs)(Json.writes[Mahasiswa])
+            "data"    -> Json.toJson(mhs)
           ))
         case None => NotFound(Json.obj("message" -> "Data tidak ditemukan"))
     }
+  }
 
+  def getListMahasiswa(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
+
+    val search: Map[String, Any] = Map(
+      "name"      -> request.getQueryString("name").getOrElse(""),
+      "is_delete" -> request.getQueryString("is_delete").getOrElse("false").toBoolean
+    )
+
+    val (listMahasiswa, total) = mahasiswaData.getListMahasiswa(search)
+
+    Ok(Json.obj(
+      "message" -> "Berhasil Mendapatkan data",
+      "data"    -> Json.toJson[List[Mahasiswa]](listMahasiswa),
+      "total"   -> total
+    ))
   }
 }
